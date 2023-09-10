@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.ik.mapper.DetailAjaxMapper">  
+     <select id="imageview" resultType="org.doit.ik.domain.Section03VO">
+     SELECT t.tic_code, i.info, i.info_agenc, i.info_use, i.tic_pic_in ,i.tic_pic_sp, i.info_note, i.info_host, i.info_num, i.info_link 
+	 FROM info i  JOIN ticket t ON  t.tic_code =  i.tic_code 
+	 WHERE t.tic_code = #{tic_code}      
+     </select>
+     
+     
+     <select id="infoview" resultType="org.doit.ik.domain.AjaxVO"> 
+	 SELECT t.tic_code, i.info, i.info_agenc, i.info_use, i.tic_pic_in ,i.info_note, i.info_host, i.info_num, i.info_link , p.place, 
+	 			p.place_add, p.place_park, p.place_lat ,p.place_lon, re.ref_rule, re.ref_cau, re.ref_way 
+	 FROM ticket t LEFT JOIN info i ON  t.tic_code = i.tic_code 
+	                      LEFT JOIN place p ON  t.tic_code = p.tic_code  
+						  LEFT JOIN refund_rule re ON  t.tic_code = re.tic_code 
+	 WHERE t.tic_code = #{tic_code}      
+     </select>
+     
+     
+     <select id="placeview" resultType="org.doit.ik.domain.Section04VO">
+     SELECT DISTINCT t.tic_code, p.place, p.place_add, p.place_park, p.place_lat ,p.place_lon 
+	 FROM place p JOIN ticket t ON  t.tic_code =  p.tic_code 
+	 WHERE t.tic_code = #{tic_code} 
+     </select>
+     
+
+     <select id="preview2" resultType="org.doit.ik.domain.Preview02VO">
+		 SELECT DISTINCT t.tic_code, r.rev_point, r.rev_img, r.rev_date, r.rev_cont, m.mem_name 
+		 FROM review r LEFT JOIN ticket t ON  t.tic_code =  r.tic_code 
+				               LEFT JOIN mem m ON  m.mem_id =  r.mem_id 
+		 WHERE t.tic_code = #{tic_code}
+    </select>  
+     
+     
+     <select id="refundview" resultType="org.doit.ik.domain.Section05VO">
+     SELECT DISTINCT t.tic_code, re.ref_rule, re.ref_cau, re.ref_way 
+	 FROM refund_rule re JOIN ticket t ON  t.tic_code =  re.tic_code 
+	 WHERE t.tic_code = #{tic_code} 
+     </select>
+
+	<select id="checkid" resultType="int">
+	SELECT count(*) 
+	From mem 
+	WHERE mem_id = #{mem_id}
+	</select>
+</mapper>

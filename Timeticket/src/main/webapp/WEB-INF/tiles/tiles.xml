@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+
+<!-- main.do  -->
+<definition name = "main" template="/WEB-INF/views/main/inc/layout.jsp">
+	<put-attribute name="header" value="/WEB-INF/views/main/inc/Timeticket_top.jsp"/>
+	<put-attribute name="banner" value="/WEB-INF/views/main/inc/banner.jsp"/>
+	<put-attribute name="content" value="/WEB-INF/views/Timeticket_main.jsp"/>
+	<put-attribute name="footer" value="/WEB-INF/views/main/inc/Timeticket_bottom.jsp"/>
+</definition>
+
+<!-- 나머지.do -->
+<definition name="*.*"  template="/WEB-INF/views/{1}/inc/layout.jsp">
+    <put-attribute name="header" value="/WEB-INF/views/inc/Timeticket_top.jsp"></put-attribute> 
+    <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"></put-attribute> 
+    <put-attribute name="footer" value="/WEB-INF/views/inc/Timeticket_bottom.jsp" />
+</definition> 
+<!--   
+ <put-attribute name="css" value="{2}.css"/>
+ css레이아웃 따로 필요한 경우 적용
+  layout.jsp에서 <tiles:getAsString name="css"/> 이렇게 주면 된다. -->
+
+</tiles-definitions>

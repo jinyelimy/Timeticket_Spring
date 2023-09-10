@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.ik.mapper.ListMapper">
+	<!-- TOP -->
+     <select id="getLcate" resultType="org.doit.ik.domain.MainTicVO">
+      SELECT lcate_code, lcate_name
+      FROM l_category
+     </select>	
+     
+     <select id="getScategory" resultType="org.doit.ik.domain.ScategoryVO">
+       SELECT DISTINCT s.scate_code,s.lcate_code,scate_name,lcate_name
+       FROM s_category s LEFT JOIN l_category l ON s.lcate_code = l.lcate_code
+       								LEFT JOIN ticket t ON t.scate_code = s.scate_code
+       WHERE
+       <choose>
+       <when test='"lcate_4".equalsIgnoreCase(lcate_code) '> tic_kids =1 </when>
+       <otherwise> REGEXP_LIKE(s.lcate_code,#{lcate_code},'i')</otherwise>
+       </choose>
+     </select>
+	
+	<select id="getRegion" resultType="org.doit.ik.domain.RegionVO">
+		SELECT *
+		FROM region
+	</select>
+	
+	<select id="getGenre" resultType="org.doit.ik.domain.GenreVO">
+		SELECT *
+		FROM genre
+		WHERE REGEXP_LIKE(scate_code,#{scate_code},'i')
+	</select>
+	
+	<select id="getList" resultType="org.doit.ik.domain.ListVO">
+	SELECT *  
+	FROM (  
+	WITH  
+				reviewAVGCNT AS (SELECT AVG(rev_point*1.0) ravg,COUNT(*) rcount,tic_code FROM review GROUP BY tic_code),
+				maxSale AS (SELECT MAX(GWON_SALE)sale,tic_code FROM opt o JOIN gwon g ON o.o_code = g.o_code  LEFT JOIN registration r ON r.regi_num = g.regi_num WHERE g.regi_num IS NULL OR sysdate BETWEEN r.regi_stime AND r.regi_etime  GROUP BY tic_code),
+				timesale as (SELECT DISTINCT tic_code,gwon_name tgwon_name, r.regi_stime,r.regi_etime FROM gwon g JOIN opt o ON g.o_code = o.o_code JOIN registration r ON r.regi_num = g.regi_num WHERE REGEXP_LIKE(gwon_name,'타임세일') AND sysdate BETWEEN r.regi_stime AND r.regi_etime),
+				todaysale as (SELECT DISTINCT tic_code,gwon_name dgwon_name FROM gwon g JOIN opt o ON g.o_code = o.o_code JOIN registration r ON r.regi_num = g.regi_num WHERE REGEXP_LIKE(gwon_name,'오늘할인') AND sysdate BETWEEN r.regi_stime AND r.regi_etime),
+				sumticket as (SELECT sum(book_cnt) sumticket,tic_code FROM payed p JOIN gwon g ON p.gwon_code = g.gwon_code JOIN opt o ON g.o_code = o.o_code GROUP BY tic_code) 
+				SELECT a.tic_code,tic_name,tic_prof,reg_code,lcate_code,lcate_name,scate_code,scate_name,gen_code,gen_name,tic_price,tic_loc,tic_regist,newb,tic_kids  
+							,NVL2(sale,sale,0) msale,NVL2(tic_price*((100-maxSale.sale)/100),tic_price*((100-maxSale.sale)/100),tic_price) stic_price,NVL2(ravg,ravg,0) ravg,NVL2(rcount,rcount,0) rcount,tgwon_name,dgwon_name,NVL2(sumticket,sumticket,0) sticket 
+				FROM ( 
+							SELECT t.tic_code,tic_name,tic_prof,reg_code,t.lcate_code,lcate_name,t.scate_code,scate_name,t.gen_code,gen_name,tic_price,tic_loc,tic_regist,trunc(sysdate-tic_regist) newb,tic_kids 
+							FROM ticket t LEFT JOIN l_category l ON t.lcate_code = l.lcate_code 
+												LEFT JOIN s_category s ON t.scate_code = s.scate_code 
+												LEFT JOIN genre g ON t.gen_code = g.gen_code 
+					       )a ,reviewAVGCNT,maxSale,timesale,todaysale,sumticket 
+				WHERE a.tic_code = reviewAVGCNT.tic_code(+)  AND maxsale.tic_code(+) = a.tic_code AND timesale.tic_code(+) = a.tic_code AND todaysale.tic_code(+) = a.tic_code AND sumticket.tic_code(+) = a.tic_code 
+				)
+	WHERE
+	<choose>
+		<when test='"lcate_4".equalsIgnoreCase(vo.lcate_code) '>tic_kids = 1</when>
+		<otherwise>  REGEXP_LIKE(lcate_code,#{vo.lcate_code},'i')  </otherwise>
+	</choose>
+	<if test='vo.scate_code != null and vo.scate_code != "" '> AND REGEXP_LIKE(scate_code,#{vo.scate_code},'i') </if>
+	<if test='vo.gen_code != null and vo.gen_code != "" '> AND REGEXP_LIKE(gen_code,#{vo.gen_code},'i') </if>
+	<if test='vo.reg_code != null and vo.reg_code != "" '> AND REGEXP_LIKE(reg_code,#{vo.reg_code},'i') </if>
+	ORDER BY 
+	<choose>
+		<when test='"tic_review".equalsIgnoreCase(sort) '> rcount DESC </when>
+		<when test='"priceAsc".equalsIgnoreCase(sort) '> stic_price ASC </when>
+		<when test='"priceDesc".equalsIgnoreCase(sort) '> stic_price DESC </when>
+		<otherwise> sticket DESC </otherwise>
+	</choose>
+	</select>
+	
+	<select id="getLcateName" resultType="string">
+		SELECT lcate_name 
+		FROM l_category 
+		WHERE REGEXP_LIKE(lcate_code,#{lcate_code},'i')
+	</select>
+	
+</mapper>

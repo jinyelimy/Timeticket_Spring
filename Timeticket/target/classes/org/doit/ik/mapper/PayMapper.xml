@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.ik.mapper.PayMapper">
+
+     <select id="tinfo" resultType="org.doit.ik.domain.PayVO">
+       SELECT tic_name, place, REGEXP_SUBSTR (place_add, '[^,]+', 1, 1) place_add 
+	   FROM ticket t join place p on t.tic_code = p.tic_code 
+	   WHERE t.tic_code = #{ tic_code }
+     </select>
+     
+     <select id="refundview" resultType="org.doit.ik.domain.PayVO">
+       SELECT DISTINCT t.tic_code, re.ref_rule, re.ref_cau, re.ref_way 
+	   FROM refund_rule re JOIN ticket t ON  t.tic_code =  re.tic_code 
+	   WHERE t.tic_code = #{ tic_code }
+     </select>
+     
+     <insert id="inpay">
+       INSERT INTO payed (book_code, mem_id, pay_code, gwon_code, book_date, book_price, book_cnt, book_point, book_stat) 
+	   VALUES ( 'book_'||SEQ_payed.NEXTVAL, #{ mem_id }, #{ pay_code }, #{ gwon_code }, sysdate, #{ book_price }, #{ book_cnt }, #{ book_point }, '구매완료' )
+     </insert>
+     
+     <select id="getLcate" resultType="org.doit.ik.domain.MainTicVO">
+      SELECT lcate_code, lcate_name
+      FROM l_category
+     </select>
+</mapper>
+

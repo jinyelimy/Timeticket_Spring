@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.ik.mapper.EventMapper">
+<!-- TOP -->
+     <select id="getLcate" resultType="org.doit.ik.domain.MainTicVO">
+      SELECT lcate_code, lcate_name
+      FROM l_category
+     </select>
+
+     <select id="getList" resultType="org.doit.ik.domain.EventVO">
+  select eve_code,e.tic_code,tic_name,eve_cond,eve_tar 
+				 ,replace(eve_stdate||'('||to_char(eve_stdate,'dy')||')','/','.') AS eve_stdate ,replace(Substr(eve_eddate||'('||to_char(eve_eddate,'dy')||')',4),'/','.') AS eve_eddate, 
+			 replace(eve_anno||'('||to_char(eve_anno,'dy')||')','/','.') AS eve_anno,tic_prof,scate_name 
+	from  event e join ticket t  on e.tic_code = t.tic_code  
+		              join  s_category s on t.scate_code = s.scate_code order by eve_code desc 
+     </select>
+     
+     <select id="detail" resultType="org.doit.ik.domain.EventVO">
+      SELECT eve_code, t.tic_code as tic_code ,tic_name,tic_prof,eve_cond,replace(eve_stdate||'('||to_char(eve_stdate,'dy')||')','/','.') AS eve_stdate 
+				 ,replace(Substr(eve_eddate||'('||to_char(eve_eddate,'dy')||')',4),'/','.') AS eve_eddate, 
+				 replace(eve_anno||'('||to_char(eve_anno,'dy')||')','/','.') AS eve_anno,eve_tar,place,scate_name,tic_age 
+				FROM ticket t  join  event e on  t.tic_code = e.tic_code 
+		             join  place p on t.tic_code = p.tic_code 
+			             join  s_category s on t.scate_code = s.scate_code 
+			             where eve_code =  #{ eve_code } 
+				            order by eve_stdate DESC 
+     </select>
+   
+     
+     
+     <select id="competition" resultType ="org.doit.ik.domain.EventVO">
+     
+      select allcount, allcount/eve_tar AS competition 
+				       from( 
+				           select count(*) AS allcount,eve_code 
+			           From entry_event 
+				          WHERE eve_code = #{ eve_code }
+				           Group by eve_code) s JOIN event e ON s.eve_code = e.eve_code 
+     </select>
+     
+     <select id="jackpot"  resultType="org.doit.ik.domain.EventVO">
+     select e.mem_id ,replace(mem_name,substr(mem_name,2,1),'*') AS mem_name, REPLACE(mem_num, SUBSTR(mem_num,5,4),'****') AS mem_num 
+				          From entry_event e join mem m on e.mem_id = m.mem_id  
+			            WHERE eve_code = #{ eve_code } and ent_stat = 1
+     
+     </select>
+
+</mapper>

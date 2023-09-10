@@ -1,0 +1,1 @@
+event확인 url

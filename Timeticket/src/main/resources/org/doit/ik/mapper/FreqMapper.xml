@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.ik.mapper.FreqMapper">
+	<!-- TOP -->
+     <select id="getLcate" resultType="org.doit.ik.domain.MainTicVO">
+      SELECT lcate_code, lcate_name
+      FROM l_category
+     </select>
+
+     <select id="selectFreq" resultType="org.doit.ik.domain.FreqVO">
+                      SELECT * 
+                    FROM( 
+                            SELECT ROWNUM no, t.* 
+                            FROM( 
+                                     SELECT to_number(REPLACE(freq_code, 'fq_', '')) AS order_num,  freq_code, freq_name, freq_cont  
+                                    FROM freq_question 
+                                    ORDER BY order_num DESC 
+                                ) t 
+                         ) m 
+                     WHERE m.no BETWEEN #{currentPage} AND #{numberPerPage}  
+           
+     </select>
+     
+     <select id="view" resultType="org.doit.ik.domain.FreqVO">
+                        SELECT freq_code,freq_name ,freq_cont 
+             FROM freq_question 
+             WHERE regexp_like(freq_code , #{freq_code} ,'i')
+     </select>
+
+<select id="getTotal" resultType="int">
+                     SELECT COUNT(*) 
+				   FROM freq_question 
+     </select>
+</mapper>

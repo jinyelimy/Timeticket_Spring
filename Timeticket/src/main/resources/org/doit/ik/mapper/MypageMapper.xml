@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.ik.mapper.MypageMapper">
+
+		<!-- TOP -->
+     <select id="getLcate" resultType="org.doit.ik.domain.MainTicVO">
+		SELECT lcate_code, lcate_name
+		FROM l_category
+     </select>
+
+     <select id="getmyRev" resultType="org.doit.ik.domain.ReviewVO">
+       SELECT *
+					 FROM
+					    ( SELECT DISTINCT t.tic_code, t.tic_name, t.tic_back, m.mem_id, m.mem_name, m.mem_point, p.book_code,
+					       r.rev_point, r.rev_img, r.rev_date, r.rev_cont, o.o_date, o.o_time, o.o_option,
+					       g.gwon_name, p.book_price, p.book_date, p.book_cnt, p.book_stat,
+					       ROW_NUMBER() OVER(PARTITION BY p.book_code ORDER BY t.tic_code) AS row_num
+					 FROM ticket t
+					 LEFT JOIN opt o ON t.tic_code = o.tic_code
+					 LEFT JOIN review r ON t.tic_code = r.tic_code
+					 LEFT JOIN payed p ON r.book_code = p.book_code
+					 LEFT JOIN mem m ON p.mem_id = m.mem_id
+					 LEFT JOIN gwon g ON o.o_code = g.o_code
+					 GROUP BY t.tic_code, t.tic_name, t.tic_back, m.mem_id, m.mem_name, m.mem_point, p.book_code, 
+					       r.rev_point, r.rev_img, r.rev_date, r.rev_cont, o.o_date, o.o_time, o.o_option,
+					       g.gwon_name, p.book_price, p.book_date, p.book_cnt, p.book_stat
+					) s
+					 WHERE s.row_num = 1 AND rev_cont IS NOT NULL AND s.mem_id = #{memId} 
+					 ORDER BY rev_date DESC 
+     </select>
+ 
+     <!-- 이용가능한 티켓 -->
+     <select id="getUsableTicCount" resultType="org.doit.ik.domain.ReviewVO">
+  		SELECT mem_id, SUM(CASE WHEN book_stat = '구매완료' THEN 1 ELSE 0 END) AS useable_tic_count 
+			 FROM payed 
+			 WHERE mem_id = #{memId}
+			 GROUP BY mem_id
+	</select>
+     
+</mapper>

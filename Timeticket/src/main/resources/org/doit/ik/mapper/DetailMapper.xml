@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.ik.mapper.DetailMapper">
+	 <!-- TOP -->
+     <select id="getLcate" resultType="org.doit.ik.domain.MainTicVO">
+		SELECT lcate_code, lcate_name
+		FROM l_category
+     </select>
+     
+
+     <select id="view" resultType="org.doit.ik.domain.Section01VO">
+        SELECT *
+	 	FROM( SELECT row_number() OVER(ORDER BY sale_pay ASC) SEQ, t.* 
+				   FROM(
+							 SELECT DISTINCT t.tic_code, tic_time, tic_loc, tic_class, tic_prof, tic_back, tic_name, tic_price, 
+							 NVL2( (100-gw.gwon_sale)/100*tic_price, (100-gw.gwon_sale)/100*tic_price, tic_price ) as sale_pay, 
+							 tic_regist, TRUNC(sysdate - tic_regist) as new_bar, tic_age, tic_run_ti, r.reg_name, l.lcate_name, s.scate_name, 
+							 g.gen_name, gw.gwon_sale 
+					         FROM ticket t LEFT JOIN region r ON t.reg_code = r.reg_code
+										         LEFT JOIN s_category s ON s.scate_code = t.scate_code 
+												 LEFT JOIN l_category l ON l.lcate_code = t.lcate_code 
+					                             LEFT JOIN genre g ON g.gen_code = t.gen_code 
+					                             LEFT JOIN opt o ON o.tic_code = t.tic_code 
+					                             LEFT JOIN gwon gw ON gw.o_code = o.o_code 
+					                             LEFT JOIN registration regis  ON regis.regi_num = gw.regi_num 
+			                 WHERE t.tic_code = #{tic_code} and (gw.regi_num IS NULL OR sysdate BETWEEN regis.regi_stime and regis.regi_etime)
+				        	) t 
+							   ) s 
+		WHERE seq = 1 
+		ORDER BY gwon_sale DESC
+     </select>
+     
+     
+     <select id="infoview" resultType="org.doit.ik.domain.Section03VO">
+     SELECT t.tic_code, i.info, i.info_agenc, i.info_use, i.tic_pic_in ,i.info_note, i.info_host, i.info_num, i.info_link 
+	 FROM info i  JOIN ticket t ON  t.tic_code =  i.tic_code 
+	 WHERE t.tic_code = #{tic_code}      
+     </select>
+     
+     
+     <select id="placeview" resultType="org.doit.ik.domain.Section04VO">
+     SELECT DISTINCT t.tic_code, p.place, p.place_add, p.place_park, p.place_lat ,p.place_lon 
+	 FROM place p JOIN ticket t ON  t.tic_code =  p.tic_code 
+	 WHERE t.tic_code = #{tic_code} 
+     </select>
+     
+     
+     <select id="preview1" resultType="org.doit.ik.domain.Preview01VO">
+     SELECT count(r.book_code) as total_rev, NVL2(sum(rev_point),sum(rev_point)/count(rev_point),0) as avg_rev 
+	 FROM review r LEFT JOIN ticket t ON  t.tic_code =  r.tic_code 
+	 WHERE t.tic_code = #{tic_code} 
+     </select>  
+     
+     
+      <select id="preview2" resultType="org.doit.ik.domain.Preview02VO">
+	     <![CDATA[
+	   	 SELECT * 
+		 FROM( 
+			        SELECT row_number() OVER(ORDER BY rev_date DESC) SEQ, t.* 
+					FROM( 
+								SELECT DISTINCT t.tic_code, r.rev_point, r.rev_img, r.rev_date, r.rev_cont, m.mem_name 
+								FROM review r LEFT JOIN ticket t ON  t.tic_code =  r.tic_code 
+									                  LEFT JOIN mem m ON  m.mem_id =  r.mem_id 
+							     WHERE t.tic_code =  #{tic_code}
+						      ) t 
+					  ) s 
+		 WHERE seq < 3]]>
+     </select>  
+ 
+     
+     <select id="timeview" resultType="org.doit.ik.domain.TimesaleVO">
+     SELECT DISTINCT t.tic_code, gw.gwon_name, gw.gwon_sale, to_char( regis.regi_etime, 'MM.DD') as ts_etime, regis.regi_etime  
+	 FROM gwon gw LEFT JOIN opt o ON  gw.o_code =  o.o_code 
+							LEFT JOIN ticket t ON o.tic_code = t.tic_code 
+							LEFT JOIN registration regis  ON regis.regi_num = gw.regi_num  
+	 WHERE t.tic_code = #{tic_code} AND gw.gwon_name = '타임세일' 
+	 AND to_char( regis.regi_etime , 'YYYYMM') = to_char( sysdate, 'YYYYMM')
+     </select>
+     
+     
+     <select id="todayview" resultType="org.doit.ik.domain.TodaysaleVO">
+     SELECT DISTINCT tic_code, gw.gwon_name, gw.gwon_sale, to_char( regis.regi_etime, 'HH24:MI:SS') as tds_fulltime, to_char( regis.regi_etime, 'HH24') as tds_time, 
+			    to_char( regis.regi_etime, 'MI') as tds_minute,to_char( regis.regi_etime, 'SS') as tds_second, regis.regi_etime 
+	 FROM gwon gw  JOIN opt o ON  gw.o_code =  o.o_code 
+				  			 JOIN registration regis  ON regis.regi_num = gw.regi_num 
+	WHERE o.tic_code = #{tic_code} and REGEXP_LIKE(gw.gwon_name,'오늘할인') AND sysdate BETWEEN regis.regi_stime AND regis.regi_etime
+     </select>
+
+</mapper>

@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.ik.mapper.MainMapper">
+
+	<!-- TOP -->
+     <select id="getLcate" resultType="org.doit.ik.domain.MainTicVO">
+		SELECT lcate_code, lcate_name
+		FROM l_category
+     </select>
+     
+    <!-- 배너 -->
+     <select id="banner" resultType="org.doit.ik.domain.BannerVO">
+		SELECT ban_code, ban_img, ban_link
+		FROM banner
+     </select>
+    
+    <!-- 신규오픈 -->
+     <select id="selectNew" resultType="org.doit.ik.domain.MainTicVO">
+     <![CDATA[
+		SELECT * 
+				 FROM ( 
+				    	WITH reviewAVGCNT AS ( 
+				        SELECT AVG(rev_point*1.0) ravg, COUNT(*) rcount, tic_code 
+				        FROM review 
+				        GROUP BY tic_code 
+				    ), 
+				    maxSale AS ( 
+			      		SELECT DISTINCT MAX(GWON_SALE) AS sale, tic_code 
+			      		FROM opt o 
+				       	JOIN gwon g ON o.o_code = g.o_code 
+				       	LEFT JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE g.regi_num IS NULL OR sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				        GROUP BY tic_code 
+				   ), 
+				    timesale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name tgwon_name, r.regi_stime, r.regi_etime 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '타임세일') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    todaysale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name dgwon_name 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '오늘할인') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    sumticket AS ( 
+				        SELECT SUM(book_cnt) sumticket, tic_code 
+				        FROM payed p 
+				        JOIN gwon g ON p.gwon_code = g.gwon_code 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        GROUP BY tic_code 
+				    ) 
+				    SELECT a.tic_code, tic_name, tic_prof, reg_code, lcate_code, lcate_name, scate_code, scate_name, gen_code, gen_name, tic_price, tic_loc, tic_regist, newb, tic_kids, 
+				        NVL2(sale, sale, 0) msale, NVL2(tic_price*((100-maxSale.sale)/100), tic_price*((100-maxSale.sale)/100), tic_price) stic_price, NVL2(ravg, ravg, 0) ravg, NVL2(rcount, rcount, 0) rcount, tgwon_name, dgwon_name, NVL2(sumticket, sumticket, 0) sticket 
+				    FROM ( 
+				        SELECT t.tic_code, tic_name, tic_prof, reg_code, t.lcate_code, lcate_name, t.scate_code, scate_name, t.gen_code, gen_name, tic_price, tic_loc, tic_regist, trunc(sysdate-tic_regist) newb, tic_kids 
+				        FROM ticket t 
+				        LEFT JOIN l_category l ON t.lcate_code = l.lcate_code
+				        LEFT JOIN s_category s ON t.scate_code = s.scate_code 
+				        LEFT JOIN genre g ON t.gen_code = g.gen_code 
+				    ) a 
+				    LEFT JOIN reviewAVGCNT ON a.tic_code = reviewAVGCNT.tic_code 
+				    LEFT JOIN maxSale ON maxSale.tic_code = a.tic_code
+				    LEFT JOIN timesale ON timesale.tic_code = a.tic_code
+				    LEFT JOIN todaysale ON todaysale.tic_code = a.tic_code
+				    LEFT JOIN sumticket ON sumticket.tic_code = a.tic_code
+				 ) 
+				   WHERE 0 <= TRUNC(sysdate - tic_regist) AND TRUNC(sysdate - tic_regist) <= 7
+				  ]]>
+     </select>
+    
+    <!-- 체험 여가 selectLcate3() -->
+     <select id="selectLcate3" resultType="org.doit.ik.domain.MainTicVO">
+		<![CDATA[ 
+		SELECT * 
+				 FROM ( 
+				    WITH reviewAVGCNT AS ( 
+				        SELECT AVG(rev_point*1.0) ravg, COUNT(*) rcount, tic_code 
+				        FROM review 
+				        GROUP BY tic_code 
+				    ), 
+				    maxSale AS ( 
+				       SELECT MAX(GWON_SALE) sale, tic_code 	
+				       FROM opt o 
+				       JOIN gwon g ON o.o_code = g.o_code 
+				       GROUP BY tic_code 
+				    ), 
+				    timesale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name tgwon_name, r.regi_stime, r.regi_etime 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '타임세일') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    todaysale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name dgwon_name 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '오늘할인') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    sumticket AS ( 
+				        SELECT SUM(book_cnt) sumticket, tic_code 
+				        FROM payed p 
+				        JOIN gwon g ON p.gwon_code = g.gwon_code 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        GROUP BY tic_code 
+				    ) 
+				    SELECT a.tic_code, tic_name, tic_prof, reg_code, lcate_code, lcate_name, scate_code, scate_name, gen_code, gen_name, tic_price, tic_loc, tic_regist, newb, tic_kids, 
+				        NVL2(sale, sale, 0) msale, NVL2(tic_price*((100-maxSale.sale)/100), tic_price*((100-maxSale.sale)/100), tic_price) stic_price, NVL2(ravg, ravg, 0) ravg, NVL2(rcount, rcount, 0) rcount, tgwon_name, dgwon_name, NVL2(sumticket, sumticket, 0) sticket 
+				    FROM ( 
+				        SELECT t.tic_code, tic_name, tic_prof, reg_code, t.lcate_code, lcate_name, t.scate_code, scate_name, t.gen_code, gen_name, tic_price, tic_loc, tic_regist, trunc(sysdate-tic_regist) newb, tic_kids 
+				        FROM ticket t 
+				        LEFT JOIN l_category l ON t.lcate_code = l.lcate_code
+				        LEFT JOIN s_category s ON t.scate_code = s.scate_code 
+				        LEFT JOIN genre g ON t.gen_code = g.gen_code 
+				    ) a 
+				    LEFT JOIN reviewAVGCNT ON a.tic_code = reviewAVGCNT.tic_code 
+				    LEFT JOIN maxSale ON maxSale.tic_code = a.tic_code
+				    LEFT JOIN timesale ON timesale.tic_code = a.tic_code
+				    LEFT JOIN todaysale ON todaysale.tic_code = a.tic_code
+				    LEFT JOIN sumticket ON sumticket.tic_code = a.tic_code
+				 ) 
+				 WHERE lcate_code = 'lcate_3'
+		]]> 
+     </select>
+    
+    <!-- 전시 selectLcate2() -->
+     <select id="selectLcate2" resultType="org.doit.ik.domain.MainTicVO">
+		<![CDATA[ 
+				SELECT * 
+				 FROM ( 
+				    WITH reviewAVGCNT AS ( 
+				        SELECT AVG(rev_point*1.0) ravg, COUNT(*) rcount, tic_code 
+				        FROM review 
+				        GROUP BY tic_code 
+				    ), 
+				    maxSale AS ( 
+				       SELECT MAX(GWON_SALE) sale, tic_code 	
+				       FROM opt o 
+				       JOIN gwon g ON o.o_code = g.o_code 
+				       GROUP BY tic_code 
+				    ), 
+				    timesale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name tgwon_name, r.regi_stime, r.regi_etime 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '타임세일') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    todaysale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name dgwon_name 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '오늘할인') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    sumticket AS ( 
+				        SELECT SUM(book_cnt) sumticket, tic_code 
+				        FROM payed p 
+				        JOIN gwon g ON p.gwon_code = g.gwon_code 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        GROUP BY tic_code 
+				    ) 
+				    SELECT a.tic_code, tic_name, tic_prof, reg_code, lcate_code, lcate_name, scate_code, scate_name, gen_code, gen_name, tic_price, tic_loc, tic_regist, newb, tic_kids, 
+				        NVL2(sale, sale, 0) msale, NVL2(tic_price*((100-maxSale.sale)/100), tic_price*((100-maxSale.sale)/100), tic_price) stic_price, NVL2(ravg, ravg, 0) ravg, NVL2(rcount, rcount, 0) rcount, tgwon_name, dgwon_name, NVL2(sumticket, sumticket, 0) sticket 
+				    FROM ( 
+				        SELECT t.tic_code, tic_name, tic_prof, reg_code, t.lcate_code, lcate_name, t.scate_code, scate_name, t.gen_code, gen_name, tic_price, tic_loc, tic_regist, trunc(sysdate-tic_regist) newb, tic_kids 
+				        FROM ticket t 
+				        LEFT JOIN l_category l ON t.lcate_code = l.lcate_code
+				        LEFT JOIN s_category s ON t.scate_code = s.scate_code 
+				        LEFT JOIN genre g ON t.gen_code = g.gen_code 
+				    ) a 
+				    LEFT JOIN reviewAVGCNT ON a.tic_code = reviewAVGCNT.tic_code 
+				    LEFT JOIN maxSale ON maxSale.tic_code = a.tic_code
+				    LEFT JOIN timesale ON timesale.tic_code = a.tic_code
+				    LEFT JOIN todaysale ON todaysale.tic_code = a.tic_code
+				    LEFT JOIN sumticket ON sumticket.tic_code = a.tic_code
+				 ) 
+				 WHERE lcate_code = 'lcate_2'
+		]]> 
+     </select>
+
+    <!-- 원데이 클래스 selectLcate5() -->
+     <select id="selectLcate5" resultType="org.doit.ik.domain.MainTicVO">
+		<![CDATA[ 
+				SELECT * 
+				 FROM ( 
+				    WITH reviewAVGCNT AS ( 
+				        SELECT AVG(rev_point*1.0) ravg, COUNT(*) rcount, tic_code 
+				        FROM review 
+				        GROUP BY tic_code 
+				    ), 
+				    maxSale AS ( 
+				       SELECT MAX(GWON_SALE) sale, tic_code 	
+				       FROM opt o 
+				       JOIN gwon g ON o.o_code = g.o_code 
+				       GROUP BY tic_code 
+				    ), 
+				    timesale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name tgwon_name, r.regi_stime, r.regi_etime 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '타임세일') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    todaysale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name dgwon_name 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '오늘할인') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    sumticket AS ( 
+				        SELECT SUM(book_cnt) sumticket, tic_code 
+				        FROM payed p 
+				        JOIN gwon g ON p.gwon_code = g.gwon_code 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        GROUP BY tic_code 
+				    ) 
+				    SELECT a.tic_code, tic_name, tic_prof, reg_code, lcate_code, lcate_name, scate_code, scate_name, gen_code, gen_name, tic_price, tic_loc, tic_regist, newb, tic_kids, 
+				        NVL2(sale, sale, 0) msale, NVL2(tic_price*((100-maxSale.sale)/100), tic_price*((100-maxSale.sale)/100), tic_price) stic_price, NVL2(ravg, ravg, 0) ravg, NVL2(rcount, rcount, 0) rcount, tgwon_name, dgwon_name, NVL2(sumticket, sumticket, 0) sticket 
+				    FROM ( 
+				        SELECT t.tic_code, tic_name, tic_prof, reg_code, t.lcate_code, lcate_name, t.scate_code, scate_name, t.gen_code, gen_name, tic_price, tic_loc, tic_regist, trunc(sysdate-tic_regist) newb, tic_kids 
+				        FROM ticket t 
+				        LEFT JOIN l_category l ON t.lcate_code = l.lcate_code
+				        LEFT JOIN s_category s ON t.scate_code = s.scate_code 
+				        LEFT JOIN genre g ON t.gen_code = g.gen_code 
+				    ) a 
+				    LEFT JOIN reviewAVGCNT ON a.tic_code = reviewAVGCNT.tic_code 
+				    LEFT JOIN maxSale ON maxSale.tic_code = a.tic_code
+				    LEFT JOIN timesale ON timesale.tic_code = a.tic_code
+				    LEFT JOIN todaysale ON todaysale.tic_code = a.tic_code
+				    LEFT JOIN sumticket ON sumticket.tic_code = a.tic_code
+				 ) 
+				 WHERE lcate_code = 'lcate_5'
+		]]> 
+     </select>
+    
+    <!-- 어린이 뮤지컬	selectKids() -->
+     <select id="selectKids" resultType="org.doit.ik.domain.MainTicVO">
+		<![CDATA[ 
+		SELECT * 
+				 FROM ( 
+				    WITH reviewAVGCNT AS ( 
+				        SELECT AVG(rev_point*1.0) ravg, COUNT(*) rcount, tic_code 
+				        FROM review 
+				        GROUP BY tic_code 
+				    ), 
+				    maxSale AS ( 
+				        SELECT DISTINCT MAX(GWON_SALE) AS sale, tic_code 
+				        FROM opt o 
+				        JOIN gwon g ON o.o_code = g.o_code 
+				        LEFT JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE g.regi_num IS NULL OR sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				        GROUP BY tic_code 
+				    ), 
+				    timesale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name tgwon_name, r.regi_stime, r.regi_etime 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '타임세일') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    todaysale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name dgwon_name 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '오늘할인') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    sumticket AS ( 
+				        SELECT SUM(book_cnt) sumticket, tic_code 
+				        FROM payed p 
+				        JOIN gwon g ON p.gwon_code = g.gwon_code 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        GROUP BY tic_code 
+				    ) 
+				    SELECT a.tic_code, tic_name, tic_prof, reg_code, lcate_code, lcate_name, scate_code, scate_name, gen_code, gen_name, tic_price, tic_loc, tic_regist, newb, tic_kids, 
+				        NVL2(sale, sale, 0) msale, NVL2(tic_price*((100-maxSale.sale)/100), tic_price*((100-maxSale.sale)/100), tic_price) stic_price, NVL2(ravg, ravg, 0) ravg, NVL2(rcount, rcount, 0) rcount, tgwon_name, dgwon_name, NVL2(sumticket, sumticket, 0) sticket 
+				    FROM ( 
+				        SELECT t.tic_code, tic_name, tic_prof, reg_code, t.lcate_code, lcate_name, t.scate_code, scate_name, t.gen_code, gen_name, tic_price, tic_loc, tic_regist, trunc(sysdate-tic_regist) newb, tic_kids 
+				        FROM ticket t 
+				        LEFT JOIN l_category l ON t.lcate_code = l.lcate_code
+				        LEFT JOIN s_category s ON t.scate_code = s.scate_code 
+				        LEFT JOIN genre g ON t.gen_code = g.gen_code 
+				    ) a 
+				    LEFT JOIN reviewAVGCNT ON a.tic_code = reviewAVGCNT.tic_code 
+				    LEFT JOIN maxSale ON maxSale.tic_code = a.tic_code
+				    LEFT JOIN timesale ON timesale.tic_code = a.tic_code
+				    LEFT JOIN todaysale ON todaysale.tic_code = a.tic_code
+				    LEFT JOIN sumticket ON sumticket.tic_code = a.tic_code
+				 ) 
+				 WHERE tic_kids = 1 
+		]]> 
+     </select>
+    
+    <!-- 타임세일 selectTimesale()	 -->
+     <select id="selectTimesale" resultType="org.doit.ik.domain.MainTicVO">
+		<![CDATA[ 
+		SELECT * 
+				 FROM ( 
+				    WITH reviewAVGCNT AS ( 
+				        SELECT AVG(rev_point*1.0) ravg, COUNT(*) rcount, tic_code 
+				        FROM review 
+				        GROUP BY tic_code 
+				    ), 
+				    maxSale AS ( 
+				        SELECT MAX(GWON_SALE) sale, tic_code 
+				        FROM opt o 
+				        JOIN gwon g ON o.o_code = g.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num
+				        WHERE sysdate BETWEEN r.regi_stime AND r.regi_etime
+				        GROUP BY tic_code 
+				    ), 
+				    timesale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name tgwon_name, r.regi_stime, r.regi_etime 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '타임세일') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    todaysale AS ( 
+				        SELECT DISTINCT tic_code, gwon_name dgwon_name 
+				        FROM gwon g 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        JOIN registration r ON r.regi_num = g.regi_num 
+				        WHERE REGEXP_LIKE(gwon_name, '오늘할인') 
+				        AND sysdate BETWEEN r.regi_stime AND r.regi_etime 
+				    ), 
+				    sumticket AS ( 
+				        SELECT SUM(book_cnt) sumticket, tic_code 
+				        FROM payed p 
+				        JOIN gwon g ON p.gwon_code = g.gwon_code 
+				        JOIN opt o ON g.o_code = o.o_code 
+				        GROUP BY tic_code 
+				    ) 
+				    SELECT a.tic_code, tic_name, tic_prof, reg_code, lcate_code, lcate_name, scate_code, scate_name, gen_code, gen_name, tic_price, tic_loc, tic_regist, newb, tic_kids, 
+				        NVL2(sale, sale, 0) msale, NVL2(tic_price*((100-maxSale.sale)/100), tic_price*((100-maxSale.sale)/100), tic_price) stic_price, NVL2(ravg, ravg, 0) ravg, NVL2(rcount, rcount, 0) rcount, tgwon_name, dgwon_name, NVL2(sumticket, sumticket, 0) sticket 
+				    FROM ( 
+				        SELECT t.tic_code, tic_name, tic_prof, reg_code, t.lcate_code, lcate_name, t.scate_code, scate_name, t.gen_code, gen_name, tic_price, tic_loc, tic_regist, trunc(sysdate-tic_regist) newb, tic_kids 
+				        FROM ticket t 
+				        LEFT JOIN l_category l ON t.lcate_code = l.lcate_code
+				        LEFT JOIN s_category s ON t.scate_code = s.scate_code 
+				        LEFT JOIN genre g ON t.gen_code = g.gen_code 
+				    ) a 
+				    LEFT JOIN reviewAVGCNT ON a.tic_code = reviewAVGCNT.tic_code 
+				    LEFT JOIN maxSale ON maxSale.tic_code = a.tic_code
+				    LEFT JOIN timesale ON timesale.tic_code = a.tic_code
+				    LEFT JOIN todaysale ON todaysale.tic_code = a.tic_code
+				    LEFT JOIN sumticket ON sumticket.tic_code = a.tic_code
+				 ) 
+				 WHERE tgwon_name = '타임세일' 
+		]]> 
+     </select>
+     
+     	<!-- 리뷰 -->
+     <select id="selectReview" resultType="org.doit.ik.domain.ReviewVO">
+		SELECT *
+					 FROM
+					    ( SELECT DISTINCT t.tic_code, t.tic_name, t.tic_back, m.mem_id, m.mem_name, m.mem_point, p.book_code,
+					       r.rev_point, r.rev_img, r.rev_date, r.rev_cont, o.o_date, o.o_time, o.o_option,
+					       g.gwon_name, p.book_price, p.book_date, p.book_cnt, p.book_stat,
+					       ROW_NUMBER() OVER(PARTITION BY p.book_code ORDER BY t.tic_code) AS row_num
+					 FROM ticket t
+					 LEFT JOIN opt o ON t.tic_code = o.tic_code
+					 LEFT JOIN review r ON t.tic_code = r.tic_code
+					 LEFT JOIN payed p ON r.book_code = p.book_code
+					 LEFT JOIN mem m ON p.mem_id = m.mem_id
+					 LEFT JOIN gwon g ON o.o_code = g.o_code
+					 GROUP BY t.tic_code, t.tic_name, t.tic_back, m.mem_id, m.mem_name, m.mem_point, p.book_code, 
+					       r.rev_point, r.rev_img, r.rev_date, r.rev_cont, o.o_date, o.o_time, o.o_option,
+					       g.gwon_name, p.book_price, p.book_date, p.book_cnt, p.book_stat
+					) s
+					 WHERE s.row_num = 1 AND rev_cont IS NOT NULL 
+					 ORDER BY rev_date DESC
+     </select>
+    
+</mapper>

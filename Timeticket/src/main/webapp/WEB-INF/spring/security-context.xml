@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/security 
+		http://www.springframework.org/schema/security/spring-security-4.2.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+		
+	<!-- 에러 : spring-security-4.2.xsd 수정. -->	
+	
+	<bean id="bCryptPasswordEncoder"  class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"></bean>
+	
+	<!-- css, js, image는 접근 제어 대상이 아니기에 보안필터 체인을 적용하지 않도록하는 코딩  -->		 		
+	<security:http pattern="/static/**" security="none" />	
+	<security:http pattern="/design/**" security="none" />
+	<security:http pattern="/css/**" security="none" />	
+	<security:http pattern="/js/**" security="none" />	 	
+	
+	<security:http>
+	    
+	    <!-- <security:intercept-url pattern="/timeticket/view.do" access="isAuthenticated()"/> -->
+	    <security:intercept-url pattern="/timeticket/pay.do" access="isAuthenticated()"/>
+	    <!-- <security:intercept-url pattern="/customer/noticeDel.htm" access="hasRole('ROLE_ADMIN')"/> -->
+	    <security:intercept-url pattern="/**" access="permitAll"/>
+	    
+	    <!-- 에러 메시지 보다는 접근 금지에 대한 특정 페이지로 이동하도록 지정
+	    <security:access-denied-handler error-page="/common/accessError.htm" />
+	     -->
+	     <!-- <security:access-denied-handler ref="customAccessDeniedHandler" /> -->
+	      <!-- authentication-success-handler-ref="customLoginSuccessHandler" -->
+	     	    	<!-- default-target-url="/timeticket/main.do" -->
+	   <security:form-login 
+	        login-page="/joinus/login.do"
+	       default-target-url="/timeticket/main.do"
+
+	        authentication-failure-url="/joinus/login.do?error=true"
+	        />
+	   
+	   <security:logout logout-url="/joinus/logout.do" logout-success-url="/timeticket/main.do"
+	    invalidate-session="true" />
+	   
+	</security:http>	
+	
+	<security:authentication-manager> 
+	  <!-- <security:authentication-provider> -->
+	  <security:authentication-provider user-service-ref="customUserDetailsService">
+	    <!-- <security:password-encoder ref="bCryptPasswordEncoder" /> -->
+	  </security:authentication-provider>
+	</security:authentication-manager>
+
+     <!-- csrf 토큰 사용하지 않겠다. -->
+     <!-- <security:csrf disabled="true"/> -->
+</beans>

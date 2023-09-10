@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.ik.mapper.MemberMapper">
+
+      <select id="getMember"  resultType="org.doit.ik.domain.MemberVO">
+       SELECT *  
+	   FROM MEMBER 
+       WHERE id = #{ id } 
+      </select>
+      
+      <insert id="insert">
+           INSERT INTO MEMBER 
+			( ID, PWD, NAME, GENDER, BIRTH, IS_LUNAR, CPHONE, EMAIL, HABIT, REGDATE) 
+			 VALUES( #{id}, #{ pwd }, #{name}, #{gender}, #{birth}, #{is_lunar}, #{cphone}, #{email}, #{habit}, SYSDATE)
+      </insert>
+      
+      
+      <resultMap type="org.doit.ik.domain.MemberVO" id="memberMap">
+	     <id property="id" column="id" />
+	     <result property="mem_id" column="mem_id" />
+	     <result property="mem_pw" column="mem_pw" />
+	     <result property="mem_name" column="mem_name" />
+	     <result property="mem_mail" column="mem_mail" />	     
+	     <result property="mem_num" column="mem_num" />	     
+	     <result property="mem_join" column="mem_join" />	     
+	     <result property="mem_point" column="mem_point" />	     
+	     <collection property="authList" resultMap="authMap"></collection>		     	    
+	   </resultMap>
+	   <resultMap type="org.doit.ik.domain.AuthVO" id="authMap"> 
+	     <result property="username" column="mem_id" />
+	     <result property="authority" column="authority" /> 
+	   </resultMap> 
+      
+      <select id="read"  resultMap="memberMap">
+        SELECT m.mem_id, mem_pw, mem_name, mem_mail, mem_num,mem_join,mem_point,authority
+		FROM mem  m LEFT JOIN mem__authorities auth ON m.mem_id = auth.username
+		WHERE m.mem_id = #{ userid }
+      </select>
+
+</mapper>
+
+
+
+
+
