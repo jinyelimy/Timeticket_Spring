@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.doit.ik.mapper.CalendarAjaxMapper">  
+     <select id="otimeview" resultType="org.doit.ik.domain.OtimeVO">
+     SELECT t.tic_code, o.o_code,o.o_date,o.o_time,o.o_option
+	 FROM ticket t  LEFT JOIN opt o ON  t.tic_code =  o.tic_code 
+	 WHERE t.tic_code = #{arg0} AND o.o_date = #{arg1}      
+     </select>
+     
+     <select id="ogwonview" resultType="org.doit.ik.domain.OgwonVO">
+     SELECT t.tic_code, t.tic_price, o.o_code, o.o_date, o.o_time, o.o_option, gw.gwon_code, gw.gwon_count, gw.gwon_name, gw.gwon_sale,NVL2((100-gw.gwon_sale)/100*tic_price,(100-gw.gwon_sale)/100*tic_price,tic_price) as gwon_pay
+	 FROM ticket t LEFT JOIN opt o ON t.tic_code = o.tic_code LEFT JOIN gwon gw ON gw.o_code = o.o_code
+	 WHERE t.tic_code = #{tic_code} AND o.o_code IN( SELECT distinct o.o_code FROM ticket t LEFT JOIN  opt o ON t.tic_code = o.tic_code LEFT JOIN  gwon gw ON gw.o_code = o.o_code WHERE TO_CHAR (o.o_date,'YYYYMMDD') = #{o_date}  AND o.o_time = #{o_time})     
+     </select>
+</mapper>

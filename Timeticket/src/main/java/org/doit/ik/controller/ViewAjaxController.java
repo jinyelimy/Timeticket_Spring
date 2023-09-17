@@ -64,13 +64,6 @@ public class ViewAjaxController {
 		 return preview02VO;
 	}
 	
-	/*
-	 * @GetMapping(value = "/ajaxview/2") public String view(String tic_code) throws
-	 * Exception {
-	 * 
-	 * }
-	 */
-	
 	@GetMapping(value = "/3")
 	public Section04VO placeview(String tic_code) throws Exception {
 		log.info("> /3... Section04VO placeview - Ajax : " + tic_code );

@@ -204,6 +204,14 @@ a {
 	cursor: pointer;
 }
 
+.calendar_popup_02 .submit_btn {
+    padding-top:10px;
+    width: 100%;
+    background: #f4f4f4;
+    cursor: pointer;
+}
+
+
 .calendar_popup_02 .submit_btn button {
 	display: block;
 	width: 100%;
@@ -975,11 +983,549 @@ height:auto;
 		<!-------- 우측 옵션선택영역 시작  -------->	
 	
 		<!-- (달력) -->
+	
+		<section style="float: right; width: 307px;">
+		<div id="calendar_popup" class="calendar_popup_02" style="">
+			<div class="popup_warp">
+				<div id="datepicker"	style="background: #fff; border-radius: 10px; min-height: 230px;" class="hasDatepicker">
+					<div class="ui-datepicker-inline ui-datepicker ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" style="display: block;">
+						<div class="ui-datepicker-header ui-widget-header ui-helper-clearfix ui-corner-all">
+							<a class="ui-datepicker-prev ui-corner-all ui-state-disabled" href="#" onclick="prevCalendar();" title="Prev">
+							<span class="ui-icon ui-icon-circle-triangle-w" data-handler="prev" data-event="click">
+							</span>
+							</a> 
+							<a href="#" onclick="nextCalendar();" class="ui-datepicker-next ui-corner-all" data-handler="next" data-event="click" title="Next"> 
+							<span class="ui-icon ui-icon-circle-triangle-e">
+							</span>	
+							</a>
+							<div class="ui-datepicker-title">
+								<!-- 년도들어가는곳 -->
+								<span class="ui-datepicker-year"></span>&nbsp;
+								<!-- 월 들어가는곳 -->
+								<span class="ui-datepicker-month"></span>							
+							</div>
+						</div>
+						
+						<table class="ui-datepicker-calendar">
+							<thead>
+								<tr>
+									<th scope="col" class="ui-datepicker-week-end"><span title="일">일</span></th>
+									<th scope="col"><span title="월">월</span></th>
+									<th scope="col"><span title="화">화</span></th>
+									<th scope="col"><span title="수">수</span></th>
+									<th scope="col"><span title="목">목</span></th>
+									<th scope="col"><span title="금">금</span></th>
+									<th scope="col" class="ui-datepicker-week-end"><span title="토">토</span></th>
+								</tr>
+							</thead>
+							
+							<tbody>
+
+							</tbody>
+						</table>
+					</div>
+				</div>
+	
+			
+			<input type="hidden" name="is_calendar" id="is_calendar" value="y">
+			        <form id="regiform" name="regiform" action="/timeticket/pay.do">
+				          <div class="time_select selectBox">
+				            <p class="selectbox_title">시간선택</p>
+				          </div>
+				          <div class="title1_select selectBox">
+				            <p class="selectbox_title">옵션선택</p>
+				          </div>
+				          <div class="title2_select selectBox">
+				            <p class="selectbox_title">권종선택</p>
+				          </div>
+				          <div class="choice_select" style="display: none;">
+				            <p class="title">수량선택</p>
+				            <div class="select_list"></div>
+				          </div>
+				          <div class="total_warp" style="display: none;">    
+				          <p class="title">총 결제금액</p>      
+				          <p class="total_price"></p>
+          				  </div>
+						  <div class="submit_btn">
+						  <button href="#" class="disabled">결제하기</button>
+	          			</div>
+          			</form>
+     			</div>
+    		</div>
+		</section>
+			
+			
+<script>
+window.onload = function () { buildCalendar(); }    // 웹 페이지가 로드되면 buildCalendar 실행
+
+let nowMonth = new Date();  // 현재 달을 페이지를 로드한 날의 달로 초기화
+let today = new Date();     // 페이지를 로드한 날짜를 저장
+today.setHours(0,0,0,0);    // 비교 편의를 위해 today의 시간을 초기화
+
+
+
+// 달력 생성 함수 : 해당 달에 맞춰 테이블을 만들고, 날짜를 채워 넣는다.
+function buildCalendar() {
+
+    let firstDate = new Date(nowMonth.getFullYear(), nowMonth.getMonth(), 1);  // 이번달 1일
+    let lastDate = new Date(nowMonth.getFullYear(), nowMonth.getMonth() + 1, 0);  // 이번달 마지막날
+	
+    let tbody_Calendar = document.querySelector(".ui-datepicker-calendar > tbody");
+    // 연도 숫자 갱신
+    $(".ui-datepicker-year").text(nowMonth.getFullYear());
+    // 월 숫자 갱신
+	$(".ui-datepicker-month").text(leftPad(nowMonth.getMonth() + 1));
+    
+    while (tbody_Calendar.rows.length > 0) {  // 이전 출력결과가 남아있는 경우 초기화
+        tbody_Calendar.deleteRow(tbody_Calendar.rows.length - 1);
+    }
+
+    let nowRow = tbody_Calendar.insertRow(); // 첫번째 행 추가           
+
+    for (let j = 0; j < firstDate.getDay(); j++) { // 이번달 1일의 요일만큼
+        let nowColumn = nowRow.insertCell(); // 열 추가
+        nowColumn.className+= "ui-datepicker-other-month ui-datepicker-unselectable ui-state-disabled"
+    }
+
+    for (let nowDay = firstDate; nowDay <= lastDate; nowDay.setDate(nowDay.getDate() + 1)) { // day는 날짜를 저장하는 변수, 이번달 마지막날까지 증가시키며 반복  
+
+        let nowColumn = nowRow.insertCell(); // 새 열을 추가하고
+        
+    
+        if (nowDay.getDay() == 0) { // 일요일인 경우 글자색 빨강으로
+            
+        	nowColumn.style.color = "#ff4b4b";
+        	nowColumn.className+="ui-datepicker-week-end";
+        	
+        }
+        
+        if (nowDay.getDay() == 6) { // 토요일인 경우 글자색 파랑으로 하고
+            
+        	nowColumn.style.color = "#4b75ff";
+            nowColumn.className+="ui-datepicker-week-end";        
+            nowRow = tbody_Calendar.insertRow(); // 새로운 행 추가
+
+		}
+        
+
+        if (nowDay < today) { // 지난날인 경우
+            
+        	nowColumn.className += " ui-datepicker-unselectable ui-state-disabled undefined";      
+        	nowColumn.innerHTML="<span class='ui-state-default'>"+nowDay.getDate()+"</span>";
+        	
+        } else if (nowDay.getFullYear() == today.getFullYear() && nowDay.getMonth() == today.getMonth() && nowDay.getDate() == today.getDate()) { // 오늘인 경우           
+            
+        	nowColumn.className += "ui-datepicker-days-cell-over undefined ui-datepicker-current-day ui-datepicker-today";
+        	nowColumn.setAttribute("data-handler", "selectDay");
+        	nowColumn.setAttribute("data-event","click");
+        	nowColumn.setAttribute("data-month",nowDay.getMonth()+1);
+        	nowColumn.setAttribute("data-year",nowDay.getFullYear());
+            nowColumn.innerHTML="<a class='ui-state-default  ui-state-highlight ui-state-active' href='#' aria-current='true' data-date='"+nowDay.getDate()+"'>"+nowDay.getDate()+"</a>";
+            nowColumn.onclick = function () { choiceDate($(this).children("a")); }
+        
+        } else { // 미래인 경우
+        	
+            nowColumn.className += " undefined";
+            nowColumn.setAttribute("data-handler", "selectDay");
+        	nowColumn.setAttribute("data-event","click");
+        	nowColumn.setAttribute("data-month",nowDay.getMonth()+1);
+        	nowColumn.setAttribute("data-year",nowDay.getFullYear());
+            nowColumn.innerHTML="<a class='ui-state-default' href='#' aria-current='false' data-date='"+nowDay.getDate()+"'>"+nowDay.getDate()+"</a>";
+            nowColumn.onclick = function () { choiceDate($(this).children("a")); }
+        
+        }
+    } // for
+} // function (buildCalendar)
+
+
+
+
+// 날짜 선택 함수 (클릭시 시 선택박스 나옴)
+function choiceDate(nowColumn) {
+    if ($("a[aria-current=true]").attr("aria-current") == 'true') { // 기존에 선택한 날짜가 있으면
+    	$("a[aria-current=true]").attr("aria-current","false"); // 해당 날짜의 "choiceDay" class 제거
+    }
+    
+  if($("a.ui-state-active").length != 0){
+    	$("a.ui-state-active").removeClass("ui-state-active"); 
+    }
+    
+    nowColumn.addClass("ui-state-active"); //클래스 추가
+    nowColumn.attr("aria-current","true");// 선택된 날짜에 "aria-current를 true" 변경
+    
+    $("div.time_select").attr("style","display:block");
+    
+    
+    var year = $(".ui-state-active").parent().data("year");
+    var month = leftPad($(".ui-state-active").parent().data("month"));
+    var date = leftPad($(".ui-state-active").data("date"));
+    
+    
+    // var params="year="+year+"&month="+month+"&date="+date+"&tic_code="+${param.tic_code};
+    var o_date = year+""+month+""+date;
+    var tic_code = "${param.tic_code}";
+    
+    console.log(o_date);
+    
+    var param = "tic_code=" + tic_code + "&o_date="+o_date;
+    
+    $.ajax({
+        url:"/ajaxcalendar/0",
+        dataType:"json",
+        type:"GET", 
+        data: param, 
+        cache:false,
+        success:function (data, textStatus, jqXHR){
+        	console.log(data);
+        	$(".time_select > .selectbox_title").empty()
+																.text("시간선택")
+        	$( data ).each(function(i, elem) {
+        		var otime = `<button type='button' id='time_btn' class='time_btn' value='\${elem.o_time}' onclick=" timebtn(this)">
+	        						<span class='option_title'>\${elem.o_time}</span>
+	        						</button>`;
+	       				
+          $("div.time_select> .selectbox_title").append(otime);
+        	}); // each
+        	
+        	$("div.time_select> .selectbox_title").hide().fadeIn();
+        	$('.title2_select').css('display', 'none');
+        	$('.choice_select').css('display', 'none');
+            $('.submit_btn button').addClass('disabled');
+        }, 
+        error:function (){alert('에러발생~~~');}
+	     })//ajax    
+} //function (choiceDate(nowColumn))
+
+
+
+// 이전달 버튼 클릭시 달력 생성 함수
+function prevCalendar() {
+    nowMonth = new Date(nowMonth.getFullYear(), nowMonth.getMonth() - 1, nowMonth.getDate());   // 현재 달을 1 감소
+    buildCalendar();    // 달력 다시 생성
+ } // function (prevCalendar)
+
+
+// 다음달 버튼 클릭시 달력 생성 함수
+function nextCalendar() {
+    nowMonth = new Date(nowMonth.getFullYear(), nowMonth.getMonth() + 1, nowMonth.getDate());   // 현재 달을 1 증가
+    buildCalendar();    // 달력 다시 생성
+} // function (nextCalendar())
+
+
+// input값이 한자리 숫자인 경우 앞에 '0' 붙혀주는 함수
+function leftPad(value) {
+    if (value < 10) {
+        value = "0" + value;
+        return value;
+    }
+    return value;
+} // function (leftPad(value))
+</script>
+
+
+
+<script>
+	// 시간 선택 함수 (클릭시 권종 선택박스 나옴)
+	function timebtn(id){
+		console.log(id);
+		$("div.title2_select").attr("style","display:block");
+		
+		var year = $(".ui-state-active").parent().data("year");
+	    var month = leftPad($(".ui-state-active").parent().data("month"));
+	    var date = leftPad($(".ui-state-active").data("date"));
+	
+	    var o_date = year+""+month+""+date;
+	    var tic_code = "${param.tic_code}";
+	    
+	    var o_time = id.value
+	    
+	    console.log(o_time);
+	    
+	    var param = "tic_code=" + tic_code + "&o_date="+o_date+"&o_time="+o_time;
+	   
+	    
+	 	// 숫자를 '#,###' 형태로 포맷팅하는 함수
+	    function formatNumber(number) {
+	        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+	    } // function(formatNumber(number))
+	    
+	    
+		$.ajax({
+	        url:"/ajaxcalendar/1",
+	        dataType:"json",
+	        type:"GET", 
+	        data:param, 
+	        cache:false,
+	        success:function (data, textStatus, jqXHR){
+	        	console.log(data);
+	        	$(".title2_select > .selectbox_title").empty()
+	        														.text("권종선택");       	
+	        	$( data ).each(function(i, elem) {
+	        		var formattedGwonPay = formatNumber(elem.gwon_pay); // #,### 형태로 포맷팅
+
+	        		
+	        		var gwon =`<button type='button' class='title2_btn \${elem.gwon_name}' name= '\${tic_code}' value='\${data}' onclick="ticCnt(\${year},\${month},\${date},'\${elem.o_time}','\${elem.gwon_name}',\${elem.gwon_count},\${elem.gwon_pay},this)">
+					        			<span class='option_title' value='\${elem.gwon_name}'>\${elem.gwon_name}</span>
+					        			<span class='title2_left' value='\${elem.gwon_count}'>남은 티켓 \${elem.gwon_count}매</span>
+					        			<span class='title2_price' value='\${elem.gwon_pay}'>				        
+					        			\${formattedGwonPay}원
+					        			</span>
+					        			</button>`;
+					        			
+	        		$(".title2_select > .selectbox_title").append(gwon);
+	        	}); //each
+	        	
+	        	$(".title2_select > .selectbox_title").hide().fadeIn();
+	        	id.classList.toggle('active');
+	        }, 
+	        error:function (){alert('에러발생~~~');}
+		     }) //ajax 
+} // function (timebtn(id))
+	
+	
+	
+	
+// 권종 선택 함수 (클릭시 수량 선택박스 나옴)
+function ticCnt(year,month,date,o_time,gwon_name,gwon_count,gwon_pay,id){
+
+	let seldate = new Date();
+	seldate.setFullYear(year);
+	seldate.setMonth(month-1);
+	seldate.setDate(date);
+	
+	let day;
+	
+	
+	// 요일로 변환함
+	switch (seldate.getDay()) {
+	case 0:
+		day="[일]";
+		break;
+	case 1:
+		day="[월]";
+		break;
+	case 2:
+		day="[화]";
+		break;
+	case 3:
+		day="[수]";
+		break;
+	case 4:
+		day="[목]";
+		break;
+	case 5:
+		day="[금]";
+		break;
+	case 6:
+		day="[토]";
+		break;
+	}
+	
+	console.log(year,month,date,o_time,gwon_name,gwon_count,gwon_pay,day,seldate,id);
+	
+	
+	// 숫자를 '#,###' 형태로 포맷팅하는 함수
+    function formatNumber(number) {
+        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    } // function (formatNumber(number))
+	
+    var formattedGwonPay = formatNumber(gwon_pay); // #,### 형태로 포맷팅
+    
+	 
+ 	// 이미 선택된 티켓인지 확인
+    if (id.classList.contains('active')) {
+      // 이미 선택된 티켓인 경우, 해당 티켓 정보를 숨김
+      $('.select_item#' + gwon_name).remove();
+      
+      
+      if ($('.select_item').length === 0) {
+    	    $('.choice_select').css('display', 'none');
+    	    $('.total_warp').css('display', 'none');
+    	    $('.submit_btn button').addClass('disabled');
+    	  }
+      
+    } else {
+    	
+      // console.log(addedTicket,total_price);
+      // 새로운 티켓을 선택한 경우, 티켓 정보를 추가
+      $(".choice_select").attr("style", "display:block");
+      $(".select_list").append(
+        $("<div></div>").attr({ class: "select_item", id: gwon_name })
+          .append($("<div></div>").attr({ class: "select_name", style: "float:left;" })
+            .text(month + "." + date + day + " " + o_time + " " + gwon_name))
+          .append($("<div></div>").attr({ style: "float:right;display: inline-block;" })
+            .append($("<a></a>").attr({ href: "#item_close", class: "close", "data-store": gwon_name })
+              .append($("<span></span>").attr({
+                class: "remove_ticket",
+                style: "font-size:14px; border:1px solid #888; border-radius:5px; width:16px; padding:0 6px; color:#fff; background:#888;",
+                value: gwon_pay
+              })
+                .text("X")))) 
+          .append($("<div></div>").attr({ style: "clear:both;" }))
+          .append($("<div></div>").attr({ class: "price_warp" })
+            .append($("<div></div>").attr({ class: "quantity" })
+              .append($("<button></button>").attr({ type: "button", class: "remove_ticket", value: gwon_pay })
+                .append($("<img>").attr({ src: '/resources/images/btn_minus_square.png', style: "width:18px; vertical-align:-3px;" })))
+              .append($("<span></span>").attr({ class: "selected_quantity" })
+                .text("1"))
+              .append($("<button></button>").attr({ type: "button", class: "add_ticket", value: gwon_pay })
+                .append($("<img>").attr({ src: '/resources/images/btn_plus_square.png', style: "width:18px; vertical-align:-3px;" }))))
+            .append($("<p></p>").attr("class", "price")
+              .text(formattedGwonPay))
+            .append($("<input></input>").attr({ type: "hidden", name: "tic_code", value: '${param.tic_code}' }))
+            .append($("<input></input>").attr({ type: "hidden", name: "gwon_name", value: gwon_name }))
+            .append($("<input></input>").attr({ type: "hidden", name: "month", value: month }))
+            .append($("<input></input>").attr({ type: "hidden", name: "date", value: date }))
+            .append($("<input></input>").attr({ type: "hidden", name: "day", value: day }))
+            .append($("<input></input>").attr({ type: "hidden", name: "o_time", value: o_time }))
+            .append($("<input></input>").attr({ type: "hidden", name: "gwon_pay", class: "item_price", value: gwon_pay }))  
+            .append($("<input></input>").attr({ type: "hidden", name: "item_jaego", class: "item_jaego", value: gwon_count }))
+            .append($("<input></input>").attr({ type: "hidden", name: "want_quantity[]", class: "item_ticket", value: "1" }))))
+            
+    $(".submit_btn > button").removeClass("disabled");		
+	$(".total_warp").attr("style","display:flex")
+	setTotalPrice();
+    }
+ 	
+	id.classList.toggle('active');
+			
+} // function (ticCnt())
+</script>
+
+
+
+
+
+<script>	
+//티켓 갯수 조절 취소의 경우
+$(document).on('click', '.select_item .close', function () {
+  let gwon = $(this).attr('data-store');
+ 
+   console.log(gwon);
+  
+  selectItemClose(gwon);
+});
+
+
+// 아이템갯수 조절 삭제 함수
+function selectItemClose(gwon) {
+  $("#" + gwon).remove(); // 해당 ID를 가진 요소를 삭제합니다.
+  setTotalPrice();
+  document.querySelector("." + gwon).classList.remove('active');
+
+  if ($('.select_item').length === 0) {
+    $('.choice_select').css('display', 'none');
+    $('.total_warp').css('display', 'none');
+    $('.submit_btn button').addClass('disabled');
+  }
+} // function (selectItemClose(gwon)) 
+
+
+// 구매할 티켓 수량 추가
+$(document).on('click', '.add_ticket', function () {
+  adjust_ticket('plus', this);
+});
+
+
+// 구매할 티켓 수량 제거
+$(document).on('click', '.remove_ticket', function () {
+  adjust_ticket('minus', this);
+});
+
+
+// 수량 적용하는 함수
+function adjust_ticket(mode, t) {
+  let price = parseInt($(t).val());
+  
+  // console.log(price);
+  
+  if (mode == 'plus') {
+    let addedTicket = parseInt($(t).parents('.price_warp').children('.item_ticket').val()); // 티켓 개수 나타내는 숫자 
+    
+    // console.log(addedTicket);
+    
+    let jaego = parseInt($(t).parents('.price_warp').children('.item_jaego').val()); // 티켓 재고 나타내는 숫자 
+    
+    // console.log(jaego);
+    
+    	if (addedTicket == jaego) { // 티켓 수량이 재고랑 같으면 
+      		window.alert('남은 티켓 수량이 부족합니다.');
+      		return;
+    	} 
+    	
+    setJaego(mode, t); // 티켓 재고 업데이트
+    
+    let item_price = parseInt($(t).parents('.price_warp').children('.item_price').val()) + price; // 수량이 증가할때 더해지는 가격 
+    
+    $(t).parents('.price_warp').children('.item_price').val(item_price); // 계산된 새로운 티켓 아이템의 가격을 해당 요소의 값으로 설정
+    $(t).parents('.price_warp').children('.price').html(item_price.toLocaleString() + '원'); // 업데이트된 티켓 아이템의 가격을 HTML 요소에 업데이트
+    setTotalPrice(); // 총가격 업데이트 
+  } // if (plus)
+
+  if (mode == 'minus') {
+	  
+    let item_price = parseInt($(t).parents('.price_warp').children('.item_price').val()) - price; // 수량이 감소할때 빼지는 가격 
+    
+    	if (item_price <= 0) {
+      		return;
+    	}
+    
+    setJaego(mode, t); // 티켓 재고 업데이트
+    
+    $(t).parents('.price_warp').children('.item_price').val(item_price); // 계산된 새로운 티켓 아이템의 가격을 해당 요소의 값으로 설정
+    $(t).parents('.price_warp').children('.price').html(item_price.toLocaleString() + '원'); // 업데이트된 티켓 아이템의 가격을 HTML 요소에 업데이트
+    setTotalPrice();  // 총가격 업데이트
+  } // if (minus)
+} // function (adjust_ticket(mode, t))
+
+
+// 재고 카운트하는 함수 
+function setJaego(mode, t) {
+  let jaegoObj = $(t).parents('.price_warp').children('.item_jaego'); // 티켓 재고 태그
+  let ticket = $(t).parents('.price_warp').children('.item_ticket');  // 티켓 수량 태그 
+  let addedTicket = parseInt($(t).parents('.price_warp').children('.item_ticket').val()); // 티켓 수량 
+  
+  if (mode == 'plus') {
+    if (addedTicket < parseInt(jaegoObj.val())) { // 티켓 수량이 재고보다 작으면
+      ticket.val(addedTicket + 1); // 티켓 수량 태그의 value 값에 1 더함 
+      $(t).parents('.quantity').children('span').html(addedTicket + 1); // 선택한 수량 나타나는 span 태그에 수량 더한 값 나타나도록 함 
+    }
+  } // if (plus)
+	  
+  if (mode == 'minus') {
+    if (addedTicket > 1) { // 티켓 수량이 1보다 클 때,
+      ticket.val(addedTicket - 1); // 티켓 수량 태그의 value 값에 1 빼줌  
+      $(t).parents('.quantity').children('span').html(addedTicket - 1); // 선택한 수량 나타나는 span 태그에 수량 뺀 값 나타나도록 함 
+    }
+  } // if (minus)
+} // function (setJeago)
+
+
+// 전체 금액 계산하는 함수 
+function setTotalPrice() {
+  document.querySelector('.total_warp').setAttribute('style', 'display: flex;');
+  let total_price = 0;
+  $('.select_item .item_price').each((i, v) => {
+    total_price += parseInt($(v).val());
+  });
+  $('.total_price').html(total_price.toLocaleString() + '원');
+
+} // function (setTotalPrice)
+</script>
+			
+				
+					
+  
+  
+  
+  
+  
+  
+  	
 		
 		
-		
+
 		<div style="clear: both;"></div>
-		
 
 		<section style="width: 820px; margin: 0 auto; padding-top: 20px;">
 			<div class="review_preview" style="">
@@ -1478,10 +2024,10 @@ height:auto;
           				
 						    <div class="info_detail_btn" id="mdetail_unfold">
 							펼쳐보기 
-							<img src="/resources/images/icon_down.png" style="width: 13px; vertical-align: 2px; padding-left: 10px;">
-							
-          				  
+							<img src="/resources/images/icon_down.png" style="width: 13px; vertical-align: 2px; padding-left: 10px;">  				  
 						</div>
+						
+						
 						</div>
 						
 						
@@ -1498,8 +2044,7 @@ height:auto;
 								   	  document.querySelector('.info_detail_btn').remove();     	   
 						              document.querySelector('.info_detail_poster').setAttribute("style", "display:none;");
 						              document.querySelector('.main_img').scrollIntoView({ behavior: 'smooth', block: 'start'});
-				
-						              
+										              
 						              var tic_code = "${param.tic_code}";
 						              
 						              $.ajax({
@@ -1518,7 +2063,6 @@ height:auto;
 							   }) // click (펼쳐보기)
 						   }); // function		             
           				</script>      
-          				
           				<script>
           				function scrollIntoView(selector) {
           			      const scrollTo = document.querySelector(selector);
